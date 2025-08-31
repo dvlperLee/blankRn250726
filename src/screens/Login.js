@@ -27,18 +27,23 @@ const LoginScreen = ({ navigation }) => {
     try {
       // 백엔드 API 호출
       const response = await authAPI.login({
-        username: id,
+        userId: id,
         password: password,
       });
 
       console.log('로그인 성공:', response);
       
-      // 로그인 성공 시 메인 화면으로 이동
-      navigation.navigate('Main');
+      // 테스트용: 강제로 에러 발생시키기 (catch 문으로 이동)
+      if (response.userId === null) {
+        console.error( '가입하지 않은 아이디이거나 잘못된 비밀번호입니다.');
+      }else {
+        // 로그인 성공 시 메인 화면으로 이동
+        navigation.navigate('Main');
+      }
       
     } catch (error) {
-      console.error('로그인 실패:', error);
-      Alert.alert('로그인 실패', error.message || '로그인에 실패했습니다.');
+      console.error( error);
+      Alert.alert(error);
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +99,8 @@ const LoginScreen = ({ navigation }) => {
       {__DEV__ && (
         <View style={styles.devInfo}>
           <Text style={styles.devInfoText}>개발 모드</Text>
-          <Text style={styles.devInfoText}>서버: localhost:8080</Text>
+          <Text style={styles.devInfoText}>서버: 172.30.1.7:7777</Text>
+          <Text style={styles.devInfoText}>엔드포인트: /userMgmtMobile/loginM</Text>
         </View>
       )}
     </View>
