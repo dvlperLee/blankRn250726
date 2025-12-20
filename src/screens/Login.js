@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { authAPI } from '../services/apiService';
+import { commonAPI } from '../services/apiService';
 
 const LoginScreen = ({ navigation }) => {
   const [id, setId] = useState('');
@@ -17,30 +17,32 @@ const LoginScreen = ({ navigation }) => {
   const passwordInputRef = useRef(null);
 
   const handleLogin = async () => {
-    if (!id || !password) {
-      Alert.alert('오류', '아이디와 비밀번호를 입력해주세요.');
-      return;
-    }
+    // if (!id || !password) {
+    //   Alert.alert('오류', '아이디와 비밀번호를 입력해주세요.');
+    //   return;
+    // }
 
     setIsLoading(true);
     
     try {
       // 백엔드 API 호출
-      const response = await authAPI.login({
-        userId: id,
-        password: password,
-      });
+      // const response = await commonAPI.login({
+      //   userId: id,
+      //   password: password,
+      // });
 
-      console.log('로그인 성공:', response);
+      //console.log('로그인 성공:', response);
       
       // 테스트용: 강제로 에러 발생시키기 (catch 문으로 이동)
-      if (response.userId === null) {
-        console.error( '가입하지 않은 아이디이거나 잘못된 비밀번호입니다.');
-      }else {
-        // 로그인 성공 시 메인 화면으로 이동
-        navigation.navigate('Main');
-      }
-      
+      // if (response.userId === null) {
+      //   console.error( '가입하지 않은 아이디이거나 잘못된 비밀번호입니다.');
+      // }else {
+      //   // 로그인 성공 시 메인 화면으로 이동
+      //   navigation.navigate('Main');
+      // }
+
+      // 삭제예정
+      navigation.navigate('Main');
     } catch (error) {
       console.error( error);
       Alert.alert(error);

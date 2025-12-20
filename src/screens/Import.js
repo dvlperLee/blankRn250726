@@ -8,6 +8,7 @@ import {
   Alert,
   FlatList,
 } from 'react-native';
+import { commonAPI } from '../services/apiService';
 
 const Import = ({ navigation }) => {
   const [containerNo, setContainerNo] = useState('');
@@ -17,18 +18,29 @@ const Import = ({ navigation }) => {
   const vehicleNoInputRef = useRef(null);
   const containerInputRef = useRef(null);
 
-  // 컨테이너 번호 목록 (예시 데이터)
-  const containerOptions = [
-    '0001', '0002', '0003', '0004', '0005',
-    '0006', '0007', '0008', '0009', '0010',
-    '1001', '1002', '1003', '1004', '1005',
-    '2001', '2002', '2003', '2004', '2005'
-  ];
+  // 컨테이너 번호 목록 상태 (API에서 가져온 데이터)
+  const [conNumberList, setConNumberList] = useState([]);
 
   useEffect(() => {
-    // 화면 진입 시 차량번호 입력창에 포커스
+    // 화면 시작할 때 컨테이너 번호 목록을 가져오는 함수
+    const fetchContainerNumbers = async () => {
+      try {
+        // 컨테이너넘버 콤보 조회
+        const conNumberList = await commonAPI.selectContainerNumber({});
+        setConNumberList(conNumberList);
+        setFilteredContainers(conNumberList);
+      } catch (error) {
+        console.error('컨테이너 번호 조회 실패:', error);
+        Alert.alert('오류', '컨테이너 번호를 가져오는데 실패했습니다.');
+      }
+    };
+
+    // 컨테이너 번호 목록 가져오기
+    fetchContainerNumbers();
+    
+    // 화면 진입 시 컨테이너 번호 입력창에 포커스
     const timer = setTimeout(() => {
-      vehicleNoInputRef.current?.focus();
+      containerInputRef.current?.focus();
     }, 100);
 
     return () => clearTimeout(timer);
@@ -36,11 +48,23 @@ const Import = ({ navigation }) => {
 
   const handleCancel = () => navigation.goBack();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!containerNo || !vehicleNo) {
       Alert.alert('오류', '컨테이너 번호와 차량 번호를 입력해주세요.');
       return;
     }
+
+    try {
+      // 백엔드 API 호출
+      const importResult = await commonAPI.import({
+        containerNo: containerNo,
+        vehicleNo: vehicleNo,
+      });
+    } catch (error) {
+      console.error( error);
+      Alert.alert(error);
+    }
+
     // TODO: 반입 등록 로직 추가
     Alert.alert('반입 등록', '반입이 성공적으로 등록되었습니다.', [
       { text: '확인', onPress: () => navigation.goBack() },
@@ -48,51 +72,53 @@ const Import = ({ navigation }) => {
   };
 
   const handleVehicleSubmit = () => {
-    // 차량번호 입력 후 컨테이너 입력창에 포커스
-    containerInputRef.current?.focus();
-    setShowContainerDropdown(true);
-    setFilteredContainers(containerOptions);
+    // 차량번호 입력 후 엔터를 누르면 확인 버튼 클릭
+    handleConfirm();
   };
 
   const handleContainerChange = (text) => {
     setContainerNo(text);
     
-    // 입력된 텍스트로 컨테이너 목록 필터링
+    // 입력된 텍스트로 컨테이너 목록 필터링 (conNumber로만 검색)
     if (text) {
-      const filtered = containerOptions.filter(container => 
-        container.includes(text)
+      const filtered = conNumberList.filter(container => 
+        container.conNumber?.includes(text)
       );
       setFilteredContainers(filtered);
       setShowContainerDropdown(true);
     } else {
-      setFilteredContainers(containerOptions);
+      setFilteredContainers(conNumberList);
       setShowContainerDropdown(true);
     }
   };
 
   const handleContainerSubmit = () => {
-    // Enter 키를 눌렀을 때 첫 번째 필터링된 결과 선택
+    // Enter 키를 눌렀을 때 첫 번째 필터링된 결과 선택하고 차량번호로 포커스 이동
     if (filteredContainers.length > 0) {
-      setContainerNo(filteredContainers[0]);
+      setContainerNo(filteredContainers[0].conNumber || filteredContainers[0]);
       setShowContainerDropdown(false);
     }
+    // 차량번호 입력창으로 포커스 이동
+    vehicleNoInputRef.current?.focus();
   };
 
   const handleContainerSelect = (selectedContainer) => {
     console.log('선택된 컨테이너:', selectedContainer); // 디버깅용
-    setContainerNo(selectedContainer);
+    // 객체인 경우 conNumber 사용, 문자열인 경우 그대로 사용
+    const containerValue = selectedContainer.conNumber || selectedContainer;
+    setContainerNo(containerValue);
     setShowContainerDropdown(false);
   };
 
   const handleContainerFocus = () => {
     setShowContainerDropdown(true);
     if (containerNo) {
-      const filtered = containerOptions.filter(container => 
-        container.includes(containerNo)
+      const filtered = conNumberList.filter(container => 
+        container.conNumber?.includes(containerNo)
       );
       setFilteredContainers(filtered);
     } else {
-      setFilteredContainers(containerOptions);
+      setFilteredContainers(conNumberList);
     }
   };
 
@@ -105,7 +131,9 @@ const Import = ({ navigation }) => {
 
   const handleDropdownItemPress = (item) => {
     console.log('드롭다운 아이템 터치:', item); // 디버깅용
-    setContainerNo(item);
+    // 객체인 경우 conNumber 사용, 문자열인 경우 그대로 사용
+    const containerValue = item.conNumber || item;
+    setContainerNo(containerValue);
     setShowContainerDropdown(false);
   };
 
@@ -119,17 +147,7 @@ const Import = ({ navigation }) => {
       </View>
 
       <View style={styles.content}>
-        <TextInput
-          ref={vehicleNoInputRef}
-          style={styles.input}
-          placeholder="차량 번호 입력 (4자리)"
-          value={vehicleNo}
-          onChangeText={setVehicleNo}
-          maxLength={4}
-          keyboardType="number-pad"
-          returnKeyType="next"
-          onSubmitEditing={handleVehicleSubmit}
-        />
+        
         
         <View style={styles.comboContainer}>
           <TextInput
@@ -142,25 +160,50 @@ const Import = ({ navigation }) => {
             //onBlur={handleContainerBlur}
             onSubmitEditing={handleContainerSubmit}
             keyboardType="number-pad"
-            returnKeyType="done"
+            returnKeyType="next"
           />
           <Text style={styles.comboArrow}>▼</Text>
+          
+          <TextInput
+            ref={vehicleNoInputRef}
+            style={styles.input}
+            placeholder="차량 번호 입력 (4자리)"
+            value={vehicleNo}
+            onChangeText={setVehicleNo}
+            maxLength={4}
+            keyboardType="number-pad"
+            returnKeyType="done"
+            onSubmitEditing={handleVehicleSubmit}
+          />
           
           {showContainerDropdown && filteredContainers.length > 0 && (
             <View style={styles.dropdown}>
               <FlatList
                 data={filteredContainers}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.dropdownItem}
-                    onPress={() => handleDropdownItemPress(item)}
-                    activeOpacity={0.7}
-                    delayPressIn={0}
-                  >
-                    <Text style={styles.dropdownItemText}>{item}</Text>
-                  </TouchableOpacity>
-                )}
+                keyExtractor={(item, index) => {
+                  // 객체인 경우 conNumber를 키로 사용, 없으면 인덱스 사용
+                  if (typeof item === 'object' && item.conNumber) {
+                    return item.conNumber + index;
+                  }
+                  return String(item) + index;
+                }}
+                renderItem={({ item }) => {
+                  // conNumber만 표시
+                  const displayText = typeof item === 'object' 
+                    ? item.conNumber || ''
+                    : item;
+                  
+                  return (
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => handleDropdownItemPress(item)}
+                      activeOpacity={0.7}
+                      delayPressIn={0}
+                    >
+                      <Text style={styles.dropdownItemText}>{displayText}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
                 nestedScrollEnabled={true}
                 keyboardShouldPersistTaps="handled"
               />

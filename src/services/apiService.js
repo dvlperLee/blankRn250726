@@ -54,7 +54,7 @@ export const removeStoredToken = () => {
 };
 
 // 인증 관련 API
-export const authAPI = {
+export const commonAPI = {
   // 로그인
   login: async (credentials) => {
     try {
@@ -70,10 +70,20 @@ export const authAPI = {
     }
   },
 
-  // 회원가입
-  register: async (userData) => {
+  // 컨테이너 번호 조회
+  selectContainerNumber: async () => {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.REGISTER, userData);
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.SELECT_CONTAINERNUMBER);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 반입 등록
+  import: async (importData) => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.IMPORT, importData);     
       return response.data;
     } catch (error) {
       throw handleApiError(error);
