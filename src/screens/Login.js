@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { commonAPI } from '../services/apiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const LoginScreen = ({ navigation }) => {
   const [id, setId] = useState('');
@@ -42,6 +44,14 @@ const LoginScreen = ({ navigation }) => {
       // }
 
       // 삭제예정
+      const storageData = {
+        userInfo: {
+          userId: 'lee',
+          userName: '이양호'
+        }
+      }  
+      await AsyncStorage.setItem('userId', 'lee');
+      await AsyncStorage.setItem('userName', '이양호');
       navigation.navigate('Main');
     } catch (error) {
       console.error( error);

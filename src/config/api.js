@@ -34,9 +34,11 @@ export const API_CONFIG = {
   // API 엔드포인트
   ENDPOINTS: {
     LOGIN: '/userMgmt/login',
-    SELECT_CONTAINERNUMBER: '/importCtrl/selectConNumber',
-    IMPORT: '/api/auth/register',
-    USER_PROFILE: '/api/user/profile',
+    SELECT_CONTAINERNUMBER: '/reCtrl/selectConNumber',
+    SELECT_CONTAINERNUMBER_FOR_BRING_OUT: '/reCtrl/selectConNumberForBringOut',
+    IMPORT: '/reCtrl/updateBringInContainer',
+    EXPORT: '/reCtrl/updateBringOutContainer',
+    //USER_PROFILE: '/api/user/profile',
     // 필요한 다른 엔드포인트들을 여기에 추가
   },
   

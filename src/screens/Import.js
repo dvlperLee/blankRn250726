@@ -8,11 +8,13 @@ import {
   Alert,
   FlatList,
 } from 'react-native';
-import { commonAPI } from '../services/apiService';
+import { commonAPI } from '../services/apiService'
+import KeyEvent from "react-native-keyevent";
 
 const Import = ({ navigation }) => {
-  const [containerNo, setContainerNo] = useState('');
-  const [vehicleNo, setVehicleNo] = useState('');
+  const [containerNumber, setcontainerNumber] = useState('');
+  const [bringInRegistrationNumber, setBringInRegistrationNumber] = useState('');
+  const [blNumber, setBlNumber] = useState('');
   const [showContainerDropdown, setShowContainerDropdown] = useState(false);
   const [filteredContainers, setFilteredContainers] = useState([]);
   const vehicleNoInputRef = useRef(null);
@@ -26,13 +28,41 @@ const Import = ({ navigation }) => {
     const fetchContainerNumbers = async () => {
       try {
         // 컨테이너넘버 콤보 조회
-        const conNumberList = await commonAPI.selectContainerNumber({});
+        const response = await commonAPI.selectContainerNumber({});
+        console.log('[Import] API 응답:', response);
+        console.log('[Import] 응답 타입:', typeof response, Array.isArray(response));
+        
+        // 응답이 배열이 아니면 배열로 변환
+        let conNumberList = response;
+        if (!Array.isArray(response)) {
+          if (response && response.data && Array.isArray(response.data)) {
+            conNumberList = response.data;
+          } else if (response && response.list && Array.isArray(response.list)) {
+            conNumberList = response.list;
+          } else {
+            console.warn('[Import] 응답이 배열이 아닙니다:', response);
+            conNumberList = [];
+          }
+        }
+        
+        console.log('[Import] 처리된 컨테이너 목록:', conNumberList);
+        console.log('[Import] 첫 번째 아이템 샘플:', conNumberList[0]);
+        console.log('[Import] 목록 개수:', conNumberList.length);
+        
         setConNumberList(conNumberList);
         setFilteredContainers(conNumberList);
       } catch (error) {
-        console.error('컨테이너 번호 조회 실패:', error);
-        Alert.alert('오류', '컨테이너 번호를 가져오는데 실패했습니다.');
+        console.error('[Import] 컨테이너 번호 조회 실패:', error);
+        Alert.alert('오류', error.message || '컨테이너 번호를 가져오는데 실패했습니다.');
       }
+
+      KeyEvent.onKeyDownListener((e) => {       
+        console.log('KeyEvent.onKeyDownListener : ', e);
+        if (e.keyCode === 66 || e.keyCode === 160) {
+          console.log('handleContainerKeyPress : ', e);
+        }
+      });
+
     };
 
     // 컨테이너 번호 목록 가져오기
@@ -49,7 +79,7 @@ const Import = ({ navigation }) => {
   const handleCancel = () => navigation.goBack();
 
   const handleConfirm = async () => {
-    if (!containerNo || !vehicleNo) {
+    if (!containerNumber || !bringInRegistrationNumber) {
       Alert.alert('오류', '컨테이너 번호와 차량 번호를 입력해주세요.');
       return;
     }
@@ -57,18 +87,25 @@ const Import = ({ navigation }) => {
     try {
       // 백엔드 API 호출
       const importResult = await commonAPI.import({
-        containerNo: containerNo,
-        vehicleNo: vehicleNo,
+        blNumber: blNumber,
+        containerNumber: containerNumber,
+        bringInRegistrationNumber: bringInRegistrationNumber,
+        userId: 'lee'
       });
+      if(importResult){
+        Alert.alert('반입 등록', '반입이 성공적으로 등록되었습니다.', [
+          { text: '확인', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        Alert.alert('반입 등록', '반입이 실패했습니다.', [
+          { text: '확인', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (error) {
       console.error( error);
       Alert.alert(error);
     }
 
-    // TODO: 반입 등록 로직 추가
-    Alert.alert('반입 등록', '반입이 성공적으로 등록되었습니다.', [
-      { text: '확인', onPress: () => navigation.goBack() },
-    ]);
   };
 
   const handleVehicleSubmit = () => {
@@ -77,13 +114,17 @@ const Import = ({ navigation }) => {
   };
 
   const handleContainerChange = (text) => {
-    setContainerNo(text);
+    setcontainerNumber(text);
     
-    // 입력된 텍스트로 컨테이너 목록 필터링 (conNumber로만 검색)
+    // 입력된 텍스트로 컨테이너 목록 필터링 (containerNumber 또는 conNumber로 검색)
     if (text) {
-      const filtered = conNumberList.filter(container => 
-        container.conNumber?.includes(text)
-      );
+      const filtered = conNumberList.filter(container => {
+        if (typeof container === 'object') {
+          const containerValue = container.containerNumber || '';
+          return containerValue.includes(text);
+        }
+        return String(container || '').includes(text);
+      });
       setFilteredContainers(filtered);
       setShowContainerDropdown(true);
     } else {
@@ -95,27 +136,49 @@ const Import = ({ navigation }) => {
   const handleContainerSubmit = () => {
     // Enter 키를 눌렀을 때 첫 번째 필터링된 결과 선택하고 차량번호로 포커스 이동
     if (filteredContainers.length > 0) {
-      setContainerNo(filteredContainers[0].conNumber || filteredContainers[0]);
+      const firstItem = filteredContainers[0];
+      const containerValue = typeof firstItem === 'object' 
+        ? (firstItem.containerNumber || '')
+        : firstItem;
+      const blNumberValue = typeof firstItem === 'object' 
+        ? (firstItem.blNumber || '')
+        : firstItem;
+      setcontainerNumber(containerValue);
+      setBlNumber(blNumberValue);
       setShowContainerDropdown(false);
     }
     // 차량번호 입력창으로 포커스 이동
     vehicleNoInputRef.current?.focus();
   };
 
-  const handleContainerSelect = (selectedContainer) => {
-    console.log('선택된 컨테이너:', selectedContainer); // 디버깅용
-    // 객체인 경우 conNumber 사용, 문자열인 경우 그대로 사용
-    const containerValue = selectedContainer.conNumber || selectedContainer;
-    setContainerNo(containerValue);
-    setShowContainerDropdown(false);
+  // const handleContainerSelect = (selectedContainer) => {
+  //   console.log('선택된 컨테이너:', selectedContainer); // 디버깅용
+  //   // 객체인 경우 containerNumber 또는 conNumber 사용
+  //   const containerValue = typeof selectedContainer === 'object' 
+  //     ? (selectedContainer.containerNumber || '')
+  //     : selectedContainer;
+  //   setcontainerNumber(containerValue);
+  //   setShowContainerDropdown(false);
+  // };
+
+  const handleContainerKeyPress = ({ nativeEvent }) => {
+    // 외부 키패드의 Enter 키 감지 (키 코드 66 또는 Enter)
+    console.log('handleContainerKeyPress : ', nativeEvent);
+    if (nativeEvent.key === 'Enter' || nativeEvent.keyCode === 66) {
+      handleContainerSubmit();
+    }
   };
 
   const handleContainerFocus = () => {
     setShowContainerDropdown(true);
-    if (containerNo) {
-      const filtered = conNumberList.filter(container => 
-        container.conNumber?.includes(containerNo)
-      );
+    if (containerNumber) {
+      const filtered = conNumberList.filter(container => {
+        if (typeof container === 'object') {
+          const containerValue = container.containerNumber || '';
+          return containerValue.includes(containerNumber);
+        }
+        return String(container || '').includes(containerNumber);
+      });
       setFilteredContainers(filtered);
     } else {
       setFilteredContainers(conNumberList);
@@ -131,9 +194,15 @@ const Import = ({ navigation }) => {
 
   const handleDropdownItemPress = (item) => {
     console.log('드롭다운 아이템 터치:', item); // 디버깅용
-    // 객체인 경우 conNumber 사용, 문자열인 경우 그대로 사용
-    const containerValue = item.conNumber || item;
-    setContainerNo(containerValue);
+    // 객체인 경우 containerNumber 또는 conNumber 사용
+    const containerValue = typeof item === 'object' 
+      ? (item.containerNumber)
+      : item;
+    const blNumberValue = typeof item === 'object' 
+      ? (item.blNumber)
+      : item;
+    setcontainerNumber(containerValue);
+    setBlNumber(blNumberValue);
     setShowContainerDropdown(false);
   };
 
@@ -154,13 +223,20 @@ const Import = ({ navigation }) => {
             ref={containerInputRef}
             style={styles.comboInput}
             placeholder="컨테이너 번호 입력"
-            value={containerNo}
+            value={containerNumber}
             onChangeText={handleContainerChange}
-            onFocus={handleContainerFocus}
-            //onBlur={handleContainerBlur}
-            onSubmitEditing={handleContainerSubmit}
-            keyboardType="number-pad"
+            onFocus={() => {
+              console.log('[Import] 컨테이너 입력 포커스');
+              handleContainerFocus();
+            }}
+            onSubmitEditing={() => {
+              console.log('[Import] 컨테이너 onSubmitEditing 이벤트 발생');
+              handleContainerSubmit();
+            }}
+            onKeyPress={handleContainerKeyPress}
+            keyboardType="default"
             returnKeyType="next"
+            autoCapitalize="characters"
           />
           <Text style={styles.comboArrow}>▼</Text>
           
@@ -168,8 +244,8 @@ const Import = ({ navigation }) => {
             ref={vehicleNoInputRef}
             style={styles.input}
             placeholder="차량 번호 입력 (4자리)"
-            value={vehicleNo}
-            onChangeText={setVehicleNo}
+            value={bringInRegistrationNumber}
+            onChangeText={setBringInRegistrationNumber}
             maxLength={4}
             keyboardType="number-pad"
             returnKeyType="done"
@@ -181,17 +257,21 @@ const Import = ({ navigation }) => {
               <FlatList
                 data={filteredContainers}
                 keyExtractor={(item, index) => {
-                  // 객체인 경우 conNumber를 키로 사용, 없으면 인덱스 사용
-                  if (typeof item === 'object' && item.conNumber) {
-                    return item.conNumber + index;
+                  // 객체인 경우 containerNumber를 키로 사용
+                  if (typeof item === 'object') {
+                    const key = item.containerNumber || item.conNumber || '';
+                    return (key || 'item') + '_' + index;
                   }
-                  return String(item) + index;
+                  return String(item || 'item') + '_' + index;
                 }}
                 renderItem={({ item }) => {
-                  // conNumber만 표시
-                  const displayText = typeof item === 'object' 
-                    ? item.conNumber || ''
-                    : item;
+                  // containerNumber 또는 conNumber 표시
+                  let displayText = '';
+                  if (typeof item === 'object') {
+                    displayText = item.containerNumber || item.conNumber || '';
+                  } else {
+                    displayText = item || '';
+                  }
                   
                   return (
                     <TouchableOpacity
@@ -275,7 +355,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: '100%',
+    top: 50, // 컨테이너 입력 필드 높이만큼 아래로 (comboInput 높이)
     left: 0,
     right: 0,
     backgroundColor: '#fff',
@@ -289,6 +369,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    marginTop: 2, // 입력 필드와 약간의 간격
   },
   dropdownItem: {
     padding: 12,

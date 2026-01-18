@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG, getApiUrl } from '../config/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -73,7 +74,17 @@ export const commonAPI = {
   // 컨테이너 번호 조회
   selectContainerNumber: async () => {
     try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.SELECT_CONTAINERNUMBER);
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_CONTAINERNUMBER);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 컨테이너 번호 조회
+  selectContainerNumberForBringOut: async () => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_CONTAINERNUMBER_FOR_BRING_OUT);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -84,6 +95,16 @@ export const commonAPI = {
   import: async (importData) => {
     try {
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.IMPORT, importData);     
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 반출 등록
+  export: async (exportData) => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.EXPORT, exportData);     
       return response.data;
     } catch (error) {
       throw handleApiError(error);
