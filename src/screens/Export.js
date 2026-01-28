@@ -28,9 +28,7 @@ const Export = ({ navigation }) => {
       try {
         // 컨테이너넘버 콤보 조회
         const response = await commonAPI.selectContainerNumberForBringOut({});
-        console.log('[Export] API 응답:', response);
-        console.log('[Export] 응답 타입:', typeof response, Array.isArray(response));
-        
+
         // 응답이 배열이 아니면 배열로 변환
         let conNumberList = response;
         if (!Array.isArray(response)) {
@@ -39,26 +37,19 @@ const Export = ({ navigation }) => {
           } else if (response && response.list && Array.isArray(response.list)) {
             conNumberList = response.list;
           } else {
-            console.warn('[Export] 응답이 배열이 아닙니다:', response);
             conNumberList = [];
           }
         }
         // TODO: 반출 등록 로직 추가
-        console.log('[Export] 처리된 컨테이너 목록:', conNumberList);
-        console.log('[Export] 첫 번째 아이템 샘플:', conNumberList[0]);
-        console.log('[Export] 목록 개수:', conNumberList.length);
-        
+
         setConNumberList(conNumberList);
         setFilteredContainers(conNumberList);
       } catch (error) {
-        console.error('[Export] 컨테이너 번호 조회 실패:', error);
         Alert.alert('오류', error.message || '컨테이너 번호를 가져오는데 실패했습니다.');
       }
-      
-      KeyEvent.onKeyDownListener((e) => {       
-        console.log('KeyEvent.onKeyDownListener : ', e);
+
+      KeyEvent.onKeyDownListener((e) => {
         if (e.keyCode === 66 || e.keyCode === 160) {
-          console.log('handleContainerKeyPress : ', e);
         }
       });
 
@@ -86,13 +77,13 @@ const Export = ({ navigation }) => {
 
     try {
       // 백엔드 API 호출
-      const exportResult = await commonAPI.export({ 
+      const exportResult = await commonAPI.export({
         blNumber: blNumber,
         containerNumber: containerNumber,
         bringOutRegistrationNumber: bringOutRegistrationNumber,
         userId: 'lee'
       });
-      if(exportResult){  
+      if (exportResult) {
         Alert.alert('반출 등록', '반출이 성공적으로 등록되었습니다.', [
           { text: '확인', onPress: () => navigation.goBack() },
         ]);
@@ -102,11 +93,10 @@ const Export = ({ navigation }) => {
         ]);
       }
     } catch (error) {
-      console.error( error);
-      Alert.alert(error);
+      Alert.alert('오류', error.message || '반출 등록 중 오류가 발생했습니다.');
     }
 
-    
+
   };
 
   const handleVehicleSubmit = () => {
@@ -116,7 +106,7 @@ const Export = ({ navigation }) => {
 
   const handleContainerChange = (text) => {
     setcontainerNumber(text);
-    
+
     // 입력된 텍스트로 컨테이너 목록 필터링 (containerNumber 또는 conNumber로 검색)
     if (text) {
       const filtered = conNumberList.filter(container => {
@@ -138,10 +128,10 @@ const Export = ({ navigation }) => {
     // Enter 키를 눌렀을 때 첫 번째 필터링된 결과 선택하고 차량번호로 포커스 이동
     if (filteredContainers.length > 0) {
       const firstItem = filteredContainers[0];
-      const containerValue = typeof firstItem === 'object' 
+      const containerValue = typeof firstItem === 'object'
         ? (firstItem.containerNumber || '')
         : firstItem;
-      const blNumberValue = typeof firstItem === 'object' 
+      const blNumberValue = typeof firstItem === 'object'
         ? (firstItem.blNumber || '')
         : firstItem;
       setcontainerNumber(containerValue);
@@ -150,11 +140,10 @@ const Export = ({ navigation }) => {
     }
     // 차량번호 입력창으로 포커스 이동
     vehicleNoInputRef.current?.focus();
-  };  
+  };
 
   const handleContainerKeyPress = ({ nativeEvent }) => {
     // 외부 키패드의 Enter 키 감지 (키 코드 66 또는 Enter)
-    console.log('handleContainerKeyPress : ', nativeEvent);
     if (nativeEvent.key === 'Enter' || nativeEvent.keyCode === 66) {
       handleContainerSubmit();
     }
@@ -177,12 +166,11 @@ const Export = ({ navigation }) => {
   };
 
   const handleDropdownItemPress = (item) => {
-    console.log('드롭다운 아이템 터치:', item); // 디버깅용
     // 객체인 경우 containerNumber 또는 conNumber 사용
-    const containerValue = typeof item === 'object' 
+    const containerValue = typeof item === 'object'
       ? (item.containerNumber)
       : item;
-    const blNumberValue = typeof item === 'object' 
+    const blNumberValue = typeof item === 'object'
       ? (item.blNumber)
       : item;
     setcontainerNumber(containerValue);
@@ -199,7 +187,7 @@ const Export = ({ navigation }) => {
         <Text style={styles.headerTitle}>반출</Text>
       </View>
 
-      <View style={styles.content}>               
+      <View style={styles.content}>
         <View style={styles.comboContainer}>
           <TextInput
             ref={containerInputRef}
@@ -208,11 +196,9 @@ const Export = ({ navigation }) => {
             value={containerNumber}
             onChangeText={handleContainerChange}
             onFocus={() => {
-              console.log('[Export] 컨테이너 입력 포커스');
               handleContainerFocus();
             }}
             onSubmitEditing={() => {
-              console.log('[Export] 컨테이너 onSubmitEditing 이벤트 발생');
               handleContainerSubmit();
             }}
             onKeyPress={handleContainerKeyPress}
@@ -221,7 +207,7 @@ const Export = ({ navigation }) => {
             autoCapitalize="characters"
           />
           <Text style={styles.comboArrow}>▼</Text>
-          
+
           <TextInput
             ref={vehicleNoInputRef}
             style={styles.input}
@@ -233,7 +219,7 @@ const Export = ({ navigation }) => {
             returnKeyType="done"
             onSubmitEditing={handleVehicleSubmit}
           />
-          
+
           {showContainerDropdown && filteredContainers.length > 0 && (
             <View style={styles.dropdown}>
               <FlatList
@@ -254,7 +240,7 @@ const Export = ({ navigation }) => {
                   } else {
                     displayText = item || '';
                   }
-                  
+
                   return (
                     <TouchableOpacity
                       style={styles.dropdownItem}
@@ -272,7 +258,7 @@ const Export = ({ navigation }) => {
             </View>
           )}
         </View>
-               
+
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}

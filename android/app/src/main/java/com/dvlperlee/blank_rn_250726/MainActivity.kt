@@ -2,6 +2,8 @@ package com.dvlperlee.blank_rn_250726
 
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
+import com.github.kevinejohn.keyevent.KeyEventModule
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -57,5 +59,20 @@ class MainActivity : ReactActivity() {
       // Use the default back button implementation on Android S
       // because it's doing more than [Activity.moveTaskToBack] in fact.
       super.invokeDefaultOnBackPressed()
+  }
+
+  override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+      KeyEventModule.getInstance()?.onKeyDownEvent(keyCode, event)
+      return super.onKeyDown(keyCode, event)
+  }
+
+  override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+      KeyEventModule.getInstance()?.onKeyUpEvent(keyCode, event)
+      return super.onKeyUp(keyCode, event)
+  }
+
+  override fun onKeyMultiple(keyCode: Int, repeatCount: Int, event: KeyEvent): Boolean {
+      KeyEventModule.getInstance()?.onKeyMultipleEvent(keyCode, repeatCount, event)
+      return super.onKeyMultiple(keyCode, repeatCount, event)
   }
 }

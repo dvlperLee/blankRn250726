@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { commonAPI } from '../services/apiService';
+import { commonAPI, setStoredToken } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
@@ -33,29 +33,12 @@ const LoginScreen = ({ navigation }) => {
       //   password: password,
       // });
 
-      //console.log('로그인 성공:', response);
-
-      // 테스트용: 강제로 에러 발생시키기 (catch 문으로 이동)
-      // if (response.userId === null) {
-      //   console.error( '가입하지 않은 아이디이거나 잘못된 비밀번호입니다.');
-      // }else {
-      //   // 로그인 성공 시 메인 화면으로 이동
-      //   navigation.navigate('Main');
-      // }
-
-      // 삭제예정
-      const storageData = {
-        userInfo: {
-          userId: 'lee',
-          userName: '이양호'
-        }
-      }
+      setStoredToken('lee'); // 테스트용
       await AsyncStorage.setItem('userId', 'lee');
       await AsyncStorage.setItem('userName', '이양호');
       navigation.replace('Main');
     } catch (error) {
-      console.error(error);
-      Alert.alert(error);
+      Alert.alert('오류', error.message || '로그인 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }

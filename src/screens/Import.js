@@ -47,8 +47,6 @@ const Import = ({ navigation }) => {
       try {
         // 컨테이너넘버 콤보 조회
         const response = await commonAPI.selectContainerNumber({});
-        console.log('[Import] API 응답:', response);
-        console.log('[Import] 응답 타입:', typeof response, Array.isArray(response));
 
         // 응답이 배열이 아니면 배열로 변환
         let conNumberList = response;
@@ -58,19 +56,14 @@ const Import = ({ navigation }) => {
           } else if (response && response.list && Array.isArray(response.list)) {
             conNumberList = response.list;
           } else {
-            console.warn('[Import] 응답이 배열이 아닙니다:', response);
             conNumberList = [];
           }
         }
 
-        console.log('[Import] 처리된 컨테이너 목록:', conNumberList);
-        console.log('[Import] 첫 번째 아이템 샘플:', conNumberList[0]);
-        console.log('[Import] 목록 개수:', conNumberList.length);
 
         setConNumberList(conNumberList);
         setFilteredContainers(conNumberList);
       } catch (error) {
-        console.error('[Import] 컨테이너 번호 조회 실패:', error);
         Alert.alert('오류', error.message || '컨테이너 번호를 가져오는데 실패했습니다.');
       }
     };
@@ -88,20 +81,16 @@ const Import = ({ navigation }) => {
 
   // 키 이벤트 리스너 설정
   useEffect(() => {
-    console.log('[Import] 키 이벤트 리스너 등록');
 
     // 키 다운 이벤트
     KeyEvent.onKeyDownListener((e) => {
-      console.log(`[Import] KeyDown - keyCode: ${e.keyCode}, key: ${e.pressedKey}`);
       // Enter 키(66) 또는 Numpad Enter(160) 처리
       if (e.keyCode === 66 || e.keyCode === 160) {
-        console.log('[Import] Enter 키 감지됨');
 
         // 1. 알림창이 떠있는 경우 확인 동작 실행
         let alertHandled = false;
         setCustomAlert(prev => {
           if (prev.visible && prev.onConfirm) {
-            console.log('[Import] 알림창 확인 동작 실행 (Enter)');
             const confirmFn = prev.onConfirm;
             setTimeout(() => confirmFn(), 10);
             alertHandled = true;
@@ -113,7 +102,6 @@ const Import = ({ navigation }) => {
         // 2. 알림창이 없고 컨테이너 입력창에 포커스가 있는 경우 제출 처리
         // (필터링된 목록이 비어있어도 첫 번째 것을 선택하거나 기존 입력을 유지하게 됨)
         if (!alertHandled && containerInputRef.current?.isFocused()) {
-          console.log('[Import] 컨테이너 입력창 Enter 처리');
           handleContainerSubmit();
         }
       }
@@ -121,17 +109,14 @@ const Import = ({ navigation }) => {
 
     // 키 업 이벤트
     KeyEvent.onKeyUpListener((e) => {
-      console.log(`[Import] KeyUp - keyCode: ${e.keyCode}, key: ${e.pressedKey}`);
     });
 
     // 키 멀티플 이벤트 (연속 입력 등)
     KeyEvent.onKeyMultipleListener((e) => {
-      console.log(`[Import] KeyMultiple - keyCode: ${e.keyCode}, characters: ${e.characters}`);
     });
 
     // 컴포넌트 언마운트 시 리스너 제거
     return () => {
-      console.log('[Import] 키 이벤트 리스너 해제');
       KeyEvent.removeKeyDownListener();
       KeyEvent.removeKeyUpListener();
       KeyEvent.removeKeyMultipleListener();
@@ -164,7 +149,6 @@ const Import = ({ navigation }) => {
         });
       }
     } catch (error) {
-      console.error(error);
       showCustomAlert('오류', error.message || String(error), () => { });
     }
 
@@ -196,7 +180,6 @@ const Import = ({ navigation }) => {
   };
 
   const handleContainerSubmit = () => {
-    console.log('[Import] handleContainerSubmit 실행');
     // Enter 키를 눌렀을 때 첫 번째 필터링된 결과 선택하고 차량번호로 포커스 이동
     if (filteredContainers.length > 0) {
       const firstItem = filteredContainers[0];
@@ -207,7 +190,6 @@ const Import = ({ navigation }) => {
         ? (firstItem.blNumber || '')
         : firstItem;
 
-      console.log('[Import] 첫 번째 아이템 선택:', containerValue);
       setcontainerNumber(containerValue);
       setBlNumber(blNumberValue);
     }
@@ -217,7 +199,6 @@ const Import = ({ navigation }) => {
 
     // UI 업데이트와 충돌을 피하기 위해 약간의 지연 후 포커스 이동
     setTimeout(() => {
-      console.log('[Import] 차량번호 입력창 포커스 시도');
       vehicleNoInputRef.current?.focus();
     }, 150);
   };
@@ -234,7 +215,6 @@ const Import = ({ navigation }) => {
 
   const handleContainerKeyPress = ({ nativeEvent }) => {
     // 외부 키패드의 Enter 키 감지 (키 코드 66 또는 Enter)
-    console.log('handleContainerKeyPress : ', nativeEvent);
     if (nativeEvent.key === 'Enter' || nativeEvent.keyCode === 66) {
       handleContainerSubmit();
     }
@@ -264,7 +244,6 @@ const Import = ({ navigation }) => {
   //   };
 
   const handleDropdownItemPress = (item) => {
-    console.log('드롭다운 아이템 터치 선택:', item);
     // 객체인 경우 containerNumber 또는 conNumber 사용
     const containerValue = typeof item === 'object'
       ? (item.containerNumber)
@@ -303,11 +282,9 @@ const Import = ({ navigation }) => {
             value={containerNumber}
             onChangeText={handleContainerChange}
             onFocus={() => {
-              console.log('[Import] 컨테이너 입력 포커스');
               handleContainerFocus();
             }}
             onSubmitEditing={() => {
-              console.log('[Import] 컨테이너 onSubmitEditing 이벤트 발생');
               handleContainerSubmit();
             }}
             onKeyPress={handleContainerKeyPress}
