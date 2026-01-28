@@ -25,7 +25,7 @@ const LoginScreen = ({ navigation }) => {
     // }
 
     setIsLoading(true);
-    
+
     try {
       // 백엔드 API 호출
       // const response = await commonAPI.login({
@@ -34,7 +34,7 @@ const LoginScreen = ({ navigation }) => {
       // });
 
       //console.log('로그인 성공:', response);
-      
+
       // 테스트용: 강제로 에러 발생시키기 (catch 문으로 이동)
       // if (response.userId === null) {
       //   console.error( '가입하지 않은 아이디이거나 잘못된 비밀번호입니다.');
@@ -49,12 +49,12 @@ const LoginScreen = ({ navigation }) => {
           userId: 'lee',
           userName: '이양호'
         }
-      }  
+      }
       await AsyncStorage.setItem('userId', 'lee');
       await AsyncStorage.setItem('userName', '이양호');
-      navigation.navigate('Main');
+      navigation.replace('Main');
     } catch (error) {
-      console.error( error);
+      console.error(error);
       Alert.alert(error);
     } finally {
       setIsLoading(false);
@@ -68,7 +68,7 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>로그인</Text>
-      
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -81,7 +81,7 @@ const LoginScreen = ({ navigation }) => {
           onSubmitEditing={handleIdSubmit}
           editable={!isLoading}
         />
-        
+
         <TextInput
           ref={passwordInputRef}
           style={styles.input}
@@ -95,8 +95,8 @@ const LoginScreen = ({ navigation }) => {
         />
       </View>
 
-      <TouchableOpacity 
-        style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+      <TouchableOpacity
+        style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
         onPress={handleLogin}
         disabled={isLoading}
       >
