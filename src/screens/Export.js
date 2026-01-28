@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
+  Modal,
 } from 'react-native';
 import { commonAPI } from '../services/apiService'
 import KeyEvent from "react-native-keyevent";
@@ -22,6 +23,24 @@ const Export = ({ navigation }) => {
 
   // 컨테이너 번호 목록 상태 (API에서 가져온 데이터)
   const [conNumberList, setConNumberList] = useState([]);
+
+  // 커스텀 알림 상태
+  const [customAlert, setCustomAlert] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
+
+  const showCustomAlert = (title, message, onConfirm) => {
+    setCustomAlert({
+      visible: true,
+      title,
+      message,
+      onConfirm
+    });
+  };
+
   useEffect(() => {
     // 화면 시작할 때 컨테이너 번호 목록을 가져오는 함수
     const fetchContainerNumbers = async () => {
@@ -40,19 +59,12 @@ const Export = ({ navigation }) => {
             conNumberList = [];
           }
         }
-        // TODO: 반출 등록 로직 추가
 
         setConNumberList(conNumberList);
         setFilteredContainers(conNumberList);
       } catch (error) {
         Alert.alert('오류', error.message || '컨테이너 번호를 가져오는데 실패했습니다.');
       }
-
-      KeyEvent.onKeyDownListener((e) => {
-        if (e.keyCode === 66 || e.keyCode === 160) {
-        }
-      });
-
     };
 
     // 컨테이너 번호 목록 가져오기
@@ -66,8 +78,40 @@ const Export = ({ navigation }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleCancel = () => navigation.goBack();
+  // 키 이벤트 리스너 설정
+  useEffect(() => {
+    // 키 다운 이벤트
+    KeyEvent.onKeyDownListener((e) => {
+      // Enter 키(66) 또는 Numpad Enter(160) 처리
+      if (e.keyCode === 66 || e.keyCode === 160) {
+        // 1. 알림창이 떠있는 경우 확인 동작 실행
+        let alertHandled = false;
+        setCustomAlert(prev => {
+          if (prev.visible && prev.onConfirm) {
+            const confirmFn = prev.onConfirm;
+            setTimeout(() => confirmFn(), 10);
+            alertHandled = true;
+            return { ...prev, visible: false };
+          }
+          return prev;
+        });
 
+        // 2. 알림창이 없고 컨테이너 입력창에 포커스가 있는 경우 제출 처리
+        if (!alertHandled && containerInputRef.current?.isFocused()) {
+          handleContainerSubmit();
+        }
+      }
+    });
+
+    // 컴포넌트 언마운트 시 리스너 제거
+    return () => {
+      KeyEvent.removeKeyDownListener();
+      KeyEvent.removeKeyUpListener();
+      KeyEvent.removeKeyMultipleListener();
+    };
+  }, [filteredContainers]);
+
+  const handleCancel = () => navigation.goBack();
 
   const handleConfirm = async () => {
     if (!containerNumber || !bringOutRegistrationNumber) {
@@ -84,19 +128,17 @@ const Export = ({ navigation }) => {
         userId: 'lee'
       });
       if (exportResult) {
-        Alert.alert('반출 등록', '반출이 성공적으로 등록되었습니다.', [
-          { text: '확인', onPress: () => navigation.goBack() },
-        ]);
+        showCustomAlert('반출 등록', '반출이 성공적으로 등록되었습니다.', () => {
+          navigation.navigate('Main');
+        });
       } else {
-        Alert.alert('반출 등록', '반출이 실패했습니다.', [
-          { text: '확인', onPress: () => navigation.goBack() },
-        ]);
+        showCustomAlert('반출 등록', '반출이 실패했습니다.', () => {
+          navigation.navigate('Main');
+        });
       }
     } catch (error) {
-      Alert.alert('오류', error.message || '반출 등록 중 오류가 발생했습니다.');
+      showCustomAlert('오류', error.message || String(error), () => { });
     }
-
-
   };
 
   const handleVehicleSubmit = () => {
@@ -107,7 +149,7 @@ const Export = ({ navigation }) => {
   const handleContainerChange = (text) => {
     setcontainerNumber(text);
 
-    // 입력된 텍스트로 컨테이너 목록 필터링 (containerNumber 또는 conNumber로 검색)
+    // 입력된 텍스트로 컨테이너 목록 필터링
     if (text) {
       const filtered = conNumberList.filter(container => {
         if (typeof container === 'object') {
@@ -134,16 +176,21 @@ const Export = ({ navigation }) => {
       const blNumberValue = typeof firstItem === 'object'
         ? (firstItem.blNumber || '')
         : firstItem;
+
       setcontainerNumber(containerValue);
       setBlNumber(blNumberValue);
-      setShowContainerDropdown(false);
     }
-    // 차량번호 입력창으로 포커스 이동
-    vehicleNoInputRef.current?.focus();
+
+    // 무조건 드롭다운 닫기
+    setShowContainerDropdown(false);
+
+    // 약간의 지연 후 포커스 이동
+    setTimeout(() => {
+      vehicleNoInputRef.current?.focus();
+    }, 150);
   };
 
   const handleContainerKeyPress = ({ nativeEvent }) => {
-    // 외부 키패드의 Enter 키 감지 (키 코드 66 또는 Enter)
     if (nativeEvent.key === 'Enter' || nativeEvent.keyCode === 66) {
       handleContainerSubmit();
     }
@@ -166,16 +213,20 @@ const Export = ({ navigation }) => {
   };
 
   const handleDropdownItemPress = (item) => {
-    // 객체인 경우 containerNumber 또는 conNumber 사용
     const containerValue = typeof item === 'object'
       ? (item.containerNumber)
       : item;
     const blNumberValue = typeof item === 'object'
       ? (item.blNumber)
       : item;
+
     setcontainerNumber(containerValue);
     setBlNumber(blNumberValue);
     setShowContainerDropdown(false);
+
+    setTimeout(() => {
+      vehicleNoInputRef.current?.focus();
+    }, 150);
   };
 
   return (
@@ -225,7 +276,6 @@ const Export = ({ navigation }) => {
               <FlatList
                 data={filteredContainers}
                 keyExtractor={(item, index) => {
-                  // 객체인 경우 containerNumber를 키로 사용
                   if (typeof item === 'object') {
                     const key = item.containerNumber || item.conNumber || '';
                     return (key || 'item') + '_' + index;
@@ -233,7 +283,6 @@ const Export = ({ navigation }) => {
                   return String(item || 'item') + '_' + index;
                 }}
                 renderItem={({ item }) => {
-                  // containerNumber 또는 conNumber 표시
                   let displayText = '';
                   if (typeof item === 'object') {
                     displayText = item.containerNumber || item.conNumber || '';
@@ -274,6 +323,31 @@ const Export = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* 커스텀 알림 모달 */}
+      <Modal
+        visible={customAlert.visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setCustomAlert({ ...customAlert, visible: false })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{customAlert.title}</Text>
+            <Text style={styles.modalMessage}>{customAlert.message}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                const confirmFn = customAlert.onConfirm;
+                setCustomAlert({ ...customAlert, visible: false });
+                if (confirmFn) confirmFn();
+              }}
+            >
+              <Text style={styles.modalButtonText}>확인</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -323,7 +397,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: 50, // 컨테이너 입력 필드 높이만큼 아래로 (comboInput 높이)
+    top: 50,
     left: 0,
     right: 0,
     backgroundColor: '#fff',
@@ -337,7 +411,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    marginTop: 2, // 입력 필드와 약간의 간격
+    marginTop: 2,
   },
   dropdownItem: {
     padding: 12,
@@ -354,6 +428,51 @@ const styles = StyleSheet.create({
   confirmButton: { backgroundColor: '#FF6B6B', marginLeft: 10 },
   cancelText: { color: '#FF6B6B', fontSize: 16, fontWeight: '600' },
   confirmText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  // 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    alignItems: 'center',
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#333',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default Export;
