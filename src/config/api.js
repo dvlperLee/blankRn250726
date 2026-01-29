@@ -6,7 +6,7 @@ const getDefaultBaseUrl = () => {
     // 모든 플랫폼에서 172.30.1.7 사용
     return 'http://192.168.0.176:7777/';
   }
-  return 'http://192.168.1.176:7777/';
+  return 'http://192.168.0.176:7777/';
 };
 
 // API 기본 설정
