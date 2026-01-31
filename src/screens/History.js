@@ -5,31 +5,52 @@ import {
   View,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
+import { commonAPI } from '../services/apiService';
 
-const sampleData = [
-  { id: '1', shipper: '(주)글로벌무역', blNumber: 'CKCOQZH0005739', importQty: 5, exportQty: 3 },
-  { id: '2', shipper: '대한상사', blNumber: 'CFA0602466', importQty: 12, exportQty: 0 },
-  { id: '3', shipper: '한진해운', blNumber: 'HDMUDALA41109', importQty: 8, exportQty: 8 },
-  { id: '4', shipper: '(주)물류혁신', blNumber: 'KOCU4069568', importQty: 2, exportQty: 1 },
-  { id: '5', shipper: '신세계푸드', blNumber: 'BSIU8068827', importQty: 20, exportQty: 15 },
-  { id: '6', shipper: '삼성전자', blNumber: 'CAIU9630424', importQty: 100, exportQty: 45 },
-];
+// sampleData 제거
 
 const History = ({ navigation }) => {
+  const [data, setData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await commonAPI.selectHistory();
+      // 백엔드 응답 구조에 따라 조정 필요 (예: result.data 또는 result)
+      // 여기서는 result가 배열이라고 가정하거나 result.list 등을 확인해야 함
+      setData(Array.isArray(result) ? result : (result.list || []));
+    } catch (err) {
+      setError(err.message || '데이터를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.tableRow}>
       <View style={[styles.cell, { flex: 2 }]}>
-        <Text style={styles.cellText} numberOfLines={1}>{item.shipper}</Text>
+        <Text style={styles.cellText} numberOfLines={1}>{item.consignorId}</Text>
       </View>
       <View style={[styles.cell, { flex: 3 }]}>
         <Text style={styles.cellText} numberOfLines={1}>{item.blNumber}</Text>
       </View>
-      <View style={[styles.cell, { flex: 1.2 }]}>
-        <Text style={[styles.cellText, styles.qtyText]}>{item.importQty}</Text>
+      <View style={[styles.cell, { flex: 1.5 }]}>
+        <Text style={[styles.cellText, styles.qtyText]}>{item.containCount}</Text>
       </View>
       <View style={[styles.cell, { flex: 1.2 }]}>
-        <Text style={[styles.cellText, styles.qtyText]}>{item.exportQty}</Text>
+        <Text style={[styles.cellText, styles.qtyText]}>{item.inCount}</Text>
+      </View>
+      <View style={[styles.cell, { flex: 1.2 }]}>
+        <Text style={[styles.cellText, styles.qtyText]}>{item.outCount}</Text>
       </View>
     </View>
   );
@@ -53,6 +74,9 @@ const History = ({ navigation }) => {
           <View style={[styles.headerCell, { flex: 3 }]}>
             <Text style={styles.headerCellText}>BL넘버</Text>
           </View>
+          <View style={[styles.headerCell, { flex: 1.5 }]}>
+            <Text style={styles.headerCellText}>컨테이너수</Text>
+          </View>
           <View style={[styles.headerCell, { flex: 1.2 }]}>
             <Text style={styles.headerCellText}>반입수</Text>
           </View>
@@ -62,12 +86,31 @@ const History = ({ navigation }) => {
         </View>
 
         {/* 데이터 리스트 */}
-        <FlatList
-          data={sampleData}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
-        />
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#4A5568" />
+            <Text style={styles.loadingText}>데이터를 불러오는 중...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchHistory}>
+              <Text style={styles.retryText}>다시 시도</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={data}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>조회된 내역이 없습니다.</Text>
+              </View>
+            }
+          />
+        )}
       </View>
     </View>
   );
@@ -145,6 +188,41 @@ const styles = StyleSheet.create({
   qtyText: {
     fontWeight: '500',
     color: '#2B6CB0',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#4A5568',
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#E53E3E',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#4A5568',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    paddingTop: 50,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#A0AEC0',
+    fontSize: 16,
   },
 });
 

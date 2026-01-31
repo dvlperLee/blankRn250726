@@ -29,7 +29,7 @@ export const API_CONFIG = {
   BASE_URL: getDefaultBaseUrl(),
 
   // 프로덕션 환경
-  PRODUCTION_URL: 'https://your-production-server.com',
+  PRODUCTION_URL: getDefaultBaseUrl(),
 
   // API 엔드포인트
   ENDPOINTS: {
@@ -38,6 +38,7 @@ export const API_CONFIG = {
     SELECT_CONTAINERNUMBER_FOR_BRING_OUT: '/reCtrl/selectConNumberForBringOut',
     IMPORT: '/reCtrl/updateBringInContainer',
     EXPORT: '/reCtrl/updateBringOutContainer',
+    SELECT_HISTORY: '/reCtrl/selectHistory',
     //USER_PROFILE: '/api/user/profile',
     // 필요한 다른 엔드포인트들을 여기에 추가
   },

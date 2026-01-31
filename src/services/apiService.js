@@ -60,11 +60,11 @@ export const commonAPI = {
   login: async (credentials) => {
     try {
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.LOGIN, credentials);
-      
+
       if (response.data.token) {
         setStoredToken(response.data.token);
       }
-      
+
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -94,7 +94,7 @@ export const commonAPI = {
   // 반입 등록
   import: async (importData) => {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.IMPORT, importData);     
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.IMPORT, importData);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -104,7 +104,17 @@ export const commonAPI = {
   // 반출 등록
   export: async (exportData) => {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.EXPORT, exportData);     
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.EXPORT, exportData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 입반출 내역 조회
+  selectHistory: async () => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_HISTORY);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -145,7 +155,7 @@ const handleApiError = (error) => {
   if (error.response) {
     // 서버에서 응답이 왔지만 에러 상태인 경우
     const { status, data } = error.response;
-    
+
     switch (status) {
       case 400:
         return new Error(data.message || '잘못된 요청입니다.');
