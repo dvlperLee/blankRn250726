@@ -7,13 +7,16 @@ import {
   ScrollView,
   Alert,
   Modal,
+  TextInput,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import KeyEvent from 'react-native-keyevent';
 
 const MainScreen = ({ navigation }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [lastKey, setLastKey] = useState('');
   const showLogoutModalRef = useRef(false);
+  const hiddenInputRef = useRef(null);
 
   // ref 동기화
   useEffect(() => {
@@ -49,42 +52,63 @@ const MainScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      // 화면이 보일 때마다 숨겨진 입력창에 포커스 강제 부여 (키 이벤트 수신 확보)
+      const focusTimer = setTimeout(() => {
+        hiddenInputRef.current?.focus();
+      }, 100);
+
       KeyEvent.onKeyDownListener((e) => {
         const keyCode = e.keyCode;
         const pressedKey = String(e.pressedKey || '');
+        setLastKey(`${pressedKey} (${keyCode})`);
 
-        // 모달이 열려있을 때 Enter 처리
         if (showLogoutModalRef.current) {
-          if (keyCode === 66 || keyCode === 13) {
+          if (keyCode === 66 || keyCode === 13 || keyCode === 160) {
             handleLogoutConfirm();
-            return;
+          } else if (keyCode === 4 || keyCode === 111) {
+            setShowLogoutModal(false);
           }
+          return;
         }
 
-        if (keyCode === 8 || pressedKey === '1') {
+        if (pressedKey === '1' || keyCode === 8 || keyCode === 145) {
           handleMenuPress(menuItems[0]);
-        } else if (keyCode === 9 || pressedKey === '2') {
+        } else if (pressedKey === '2' || keyCode === 9 || keyCode === 146) {
           handleMenuPress(menuItems[1]);
-        } else if (keyCode === 10 || pressedKey === '3') {
+        } else if (pressedKey === '3' || keyCode === 10 || keyCode === 147) {
           handleMenuPress(menuItems[2]);
-        } else if (keyCode === 11 || pressedKey === '4') {
+        } else if (pressedKey === '4' || keyCode === 11 || keyCode === 148) {
           handleMenuPress(menuItems[3]);
-        } else if (keyCode === 12 || pressedKey === '5') {
+        } else if (pressedKey === '5' || keyCode === 12 || keyCode === 149) {
           handleMenuPress(menuItems[4]);
         }
       });
 
       return () => {
+        clearTimeout(focusTimer);
         KeyEvent.removeKeyDownListener();
       };
     }, [])
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      focusable={true}
+    >
+      <TextInput
+        ref={hiddenInputRef}
+        style={styles.hiddenInput}
+        showSoftInputOnFocus={false}
+        autoFocus={true}
+        caretHidden={true}
+      />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>입반출 관리 시스템</Text>
         <Text style={styles.welcomeText}>환영합니다!</Text>
+        {__DEV__ && lastKey ? (
+          <Text style={{ color: '#ffff00', fontSize: 12 }}>Last Key: {lastKey}</Text>
+        ) : null}
       </View>
 
       <ScrollView style={styles.menuContainer}>
@@ -235,6 +259,12 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  hiddenInput: {
+    position: 'absolute',
+    width: 0,
+    height: 0,
+    opacity: 0,
   },
 });
 

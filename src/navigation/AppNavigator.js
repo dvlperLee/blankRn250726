@@ -8,6 +8,8 @@ import Import from '../screens/Import';
 import Export from '../screens/Export';
 import Management from '../screens/Management';
 import History from '../screens/History';
+import ImportMgmt from '../screens/ImportMgmt';
+import ExportMgmt from '../screens/ExportMgmt';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +28,8 @@ const AppNavigator = () => {
         <Stack.Screen name="Export" component={Export} />
         <Stack.Screen name="Management" component={Management} />
         <Stack.Screen name="History" component={History} />
+        <Stack.Screen name="ImportMgmt" component={ImportMgmt} />
+        <Stack.Screen name="ExportMgmt" component={ExportMgmt} />
       </Stack.Navigator>
     </NavigationContainer>
   );

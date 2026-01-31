@@ -40,16 +40,16 @@ const History = ({ navigation }) => {
       <View style={[styles.cell, { flex: 2 }]}>
         <Text style={styles.cellText} numberOfLines={1}>{item.consignorId}</Text>
       </View>
-      <View style={[styles.cell, { flex: 3 }]}>
+      <View style={[styles.cell, { flex: 5 }]}>
         <Text style={styles.cellText} numberOfLines={1}>{item.blNumber}</Text>
       </View>
-      <View style={[styles.cell, { flex: 1.5 }]}>
+      <View style={[styles.cell, { flex: 1 }]}>
         <Text style={[styles.cellText, styles.qtyText]}>{item.containCount}</Text>
       </View>
-      <View style={[styles.cell, { flex: 1.2 }]}>
+      <View style={[styles.cell, { flex: 1 }]}>
         <Text style={[styles.cellText, styles.qtyText]}>{item.inCount}</Text>
       </View>
-      <View style={[styles.cell, { flex: 1.2 }]}>
+      <View style={[styles.cell, { flex: 1 }]}>
         <Text style={[styles.cellText, styles.qtyText]}>{item.outCount}</Text>
       </View>
     </View>
@@ -71,17 +71,17 @@ const History = ({ navigation }) => {
           <View style={[styles.headerCell, { flex: 2 }]}>
             <Text style={styles.headerCellText}>화주</Text>
           </View>
-          <View style={[styles.headerCell, { flex: 3 }]}>
+          <View style={[styles.headerCell, { flex: 5 }]}>
             <Text style={styles.headerCellText}>BL넘버</Text>
           </View>
-          <View style={[styles.headerCell, { flex: 1.5 }]}>
-            <Text style={styles.headerCellText}>컨테이너수</Text>
+          <View style={[styles.headerCell, { flex: 1 }]}>
+            <Text style={styles.headerCellText}>컨</Text>
           </View>
-          <View style={[styles.headerCell, { flex: 1.2 }]}>
-            <Text style={styles.headerCellText}>반입수</Text>
+          <View style={[styles.headerCell, { flex: 1 }]}>
+            <Text style={styles.headerCellText}>반입</Text>
           </View>
-          <View style={[styles.headerCell, { flex: 1.2 }]}>
-            <Text style={styles.headerCellText}>반출수</Text>
+          <View style={[styles.headerCell, { flex: 1 }]}>
+            <Text style={styles.headerCellText}>반출</Text>
           </View>
         </View>
 

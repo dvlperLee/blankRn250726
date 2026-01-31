@@ -286,3 +286,7 @@ setDevUrl('PUBLIC_IP');
 - Wi-Fi 연결 상태 확인
 - 서버 접근 가능 여부 확인
 - 자동 URL 전환
+
+### 5. 빌드
+- cd android
+- ./gradlew clean assembleRelease

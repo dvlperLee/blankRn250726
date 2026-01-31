@@ -121,6 +121,46 @@ export const commonAPI = {
     }
   },
 
+  // 반입 관리 조회
+  selectImportMgmt: async (searchParams) => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_IMPORT_MGMT, searchParams);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 반입 관리 저장
+  updateImportMgmt: async (updateData) => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.UPDATE_IMPORT_MGMT, updateData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 반출 관리 조회
+  selectExportMgmt: async (searchParams) => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_EXPORT_MGMT, searchParams);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // 반출 관리 저장
+  updateExportMgmt: async (updateData) => {
+    try {
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.UPDATE_EXPORT_MGMT, updateData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   // 로그아웃
   logout: () => {
     removeStoredToken();

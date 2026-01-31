@@ -19,15 +19,15 @@ const Management = ({ navigation }) => {
       <View style={styles.content}>
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigation.navigate('Import')}
+          onPress={() => navigation.navigate('ImportMgmt')}
         >
-          <Text style={styles.menuText}>반입</Text>
+          <Text style={styles.menuText}>반입관리</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigation.navigate('Export')}
+          onPress={() => navigation.navigate('ExportMgmt')}
         >
-          <Text style={styles.menuText}>반출</Text>
+          <Text style={styles.menuText}>반출관리</Text>
         </TouchableOpacity>
       </View>
     </View>
