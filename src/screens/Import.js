@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   FlatList,
   Modal,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { commonAPI } from '../services/apiService'
 import KeyEvent from "react-native-keyevent";
 
@@ -16,6 +17,7 @@ const Import = ({ navigation }) => {
   const [containerNumber, setcontainerNumber] = useState('');
   const [bringInRegistrationNumber, setBringInRegistrationNumber] = useState('');
   const [blNumber, setBlNumber] = useState('');
+  const [consignorId, setConsignorId] = useState('');
   const [showContainerDropdown, setShowContainerDropdown] = useState(false);
   const [filteredContainers, setFilteredContainers] = useState([]);
   const vehicleNoInputRef = useRef(null);
@@ -80,48 +82,41 @@ const Import = ({ navigation }) => {
   }, []);
 
   // 키 이벤트 리스너 설정
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
+      // 키 다운 이벤트
+      KeyEvent.onKeyDownListener((e) => {
+        // Enter 키(66) 또는 Numpad Enter(160) 처리
+        if (e.keyCode === 66 || e.keyCode === 160) {
 
-    // 키 다운 이벤트
-    KeyEvent.onKeyDownListener((e) => {
-      // Enter 키(66) 또는 Numpad Enter(160) 처리
-      if (e.keyCode === 66 || e.keyCode === 160) {
+          // 1. 알림창이 떠있는 경우 확인 동작 실행
+          let alertHandled = false;
+          setCustomAlert(prev => {
+            if (prev.visible && prev.onConfirm) {
+              const confirmFn = prev.onConfirm;
+              setTimeout(() => confirmFn(), 10);
+              alertHandled = true;
+              return { ...prev, visible: false };
+            }
+            return prev;
+          });
 
-        // 1. 알림창이 떠있는 경우 확인 동작 실행
-        let alertHandled = false;
-        setCustomAlert(prev => {
-          if (prev.visible && prev.onConfirm) {
-            const confirmFn = prev.onConfirm;
-            setTimeout(() => confirmFn(), 10);
-            alertHandled = true;
-            return { ...prev, visible: false };
+          // 2. 알림창이 없고 컨테이너 입력창에 포커스가 있는 경우 제출 처리
+          // (필터링된 목록이 비어있어도 첫 번째 것을 선택하거나 기존 입력을 유지하게 됨)
+          if (!alertHandled && containerInputRef.current?.isFocused()) {
+            handleContainerSubmit();
           }
-          return prev;
-        });
-
-        // 2. 알림창이 없고 컨테이너 입력창에 포커스가 있는 경우 제출 처리
-        // (필터링된 목록이 비어있어도 첫 번째 것을 선택하거나 기존 입력을 유지하게 됨)
-        if (!alertHandled && containerInputRef.current?.isFocused()) {
-          handleContainerSubmit();
         }
-      }
-    });
+      });
 
-    // 키 업 이벤트
-    KeyEvent.onKeyUpListener((e) => {
-    });
-
-    // 키 멀티플 이벤트 (연속 입력 등)
-    KeyEvent.onKeyMultipleListener((e) => {
-    });
-
-    // 컴포넌트 언마운트 시 리스너 제거
-    return () => {
-      KeyEvent.removeKeyDownListener();
-      KeyEvent.removeKeyUpListener();
-      KeyEvent.removeKeyMultipleListener();
-    };
-  }, [filteredContainers]); // filteredContainers 상태를 참조하도록 의존성 추가
+      // 컴포넌트 언마운트 시 리스너 제거
+      return () => {
+        KeyEvent.removeKeyDownListener();
+        KeyEvent.removeKeyUpListener();
+        KeyEvent.removeKeyMultipleListener();
+      };
+    }, [filteredContainers]) // filteredContainers 상태를 참조하도록 의존성 추가
+  );
 
   const handleCancel = () => navigation.goBack();
 
@@ -137,6 +132,8 @@ const Import = ({ navigation }) => {
         blNumber: blNumber,
         containerNumber: containerNumber,
         bringInRegistrationNumber: bringInRegistrationNumber,
+        consignorId: consignorId,
+        // 삭제예정
         userId: 'lee'
       });
       if (importResult) {
@@ -192,6 +189,7 @@ const Import = ({ navigation }) => {
 
       setcontainerNumber(containerValue);
       setBlNumber(blNumberValue);
+      setConsignorId(firstItem.consignorId || '');
     }
 
     // 무조건 드롭다운 닫기
@@ -254,6 +252,7 @@ const Import = ({ navigation }) => {
 
     setcontainerNumber(containerValue);
     setBlNumber(blNumberValue);
+    setConsignorId(item.consignorId || '');
     setShowContainerDropdown(false);
 
     // 터치 선택 후에도 차량번호 입력창으로 포커스 이동

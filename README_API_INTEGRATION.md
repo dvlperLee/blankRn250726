@@ -290,3 +290,8 @@ setDevUrl('PUBLIC_IP');
 ### 5. 빌드
 - cd android
 - ./gradlew clean assembleRelease
+
+### 6. 이미지 및 아이콘 변경
+안드로이드 시
+- npx expo prebuild --platform android
+- 재시작

@@ -122,9 +122,11 @@ export const commonAPI = {
   },
 
   // 반입 관리 조회
-  selectImportMgmt: async (searchParams) => {
+  selectImportMgmtList: async (importDate) => {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_IMPORT_MGMT, searchParams);
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_IMPORT_MGMT, {}, {
+        params: { importDate }
+      });
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -132,7 +134,7 @@ export const commonAPI = {
   },
 
   // 반입 관리 저장
-  updateImportMgmt: async (updateData) => {
+  updateImportMgmtList: async (updateData) => {
     try {
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.UPDATE_IMPORT_MGMT, updateData);
       return response.data;
@@ -142,9 +144,11 @@ export const commonAPI = {
   },
 
   // 반출 관리 조회
-  selectExportMgmt: async (searchParams) => {
+  selectExportMgmtList: async (exportDate) => {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_EXPORT_MGMT, searchParams);
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.SELECT_EXPORT_MGMT, {}, {
+        params: { exportDate }
+      });
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -152,7 +156,7 @@ export const commonAPI = {
   },
 
   // 반출 관리 저장
-  updateExportMgmt: async (updateData) => {
+  updateExportMgmtList: async (updateData) => {
     try {
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.UPDATE_EXPORT_MGMT, updateData);
       return response.data;

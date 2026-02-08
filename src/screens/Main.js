@@ -36,7 +36,7 @@ const MainScreen = ({ navigation }) => {
     navigation.replace('Login');
   };
 
-  const handleMenuPress = (item) => {
+  const handleMenuPress = useCallback((item) => {
     if (item.title === '로그아웃') {
       setShowLogoutModal(true);
     } else if (item.title === '반입') {
@@ -48,7 +48,7 @@ const MainScreen = ({ navigation }) => {
     } else if (item.title === '입반출내역') {
       navigation.navigate('History');
     }
-  };
+  }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,7 +59,7 @@ const MainScreen = ({ navigation }) => {
 
       KeyEvent.onKeyDownListener((e) => {
         const keyCode = e.keyCode;
-        const pressedKey = String(e.pressedKey || '');
+        const pressedKey = e.pressedKey ? String(e.pressedKey) : '';
         setLastKey(`${pressedKey} (${keyCode})`);
 
         if (showLogoutModalRef.current) {
@@ -87,8 +87,10 @@ const MainScreen = ({ navigation }) => {
       return () => {
         clearTimeout(focusTimer);
         KeyEvent.removeKeyDownListener();
+        KeyEvent.removeKeyUpListener();
+        KeyEvent.removeKeyMultipleListener();
       };
-    }, [])
+    }, [navigation, handleMenuPress, menuItems])
   );
 
   return (
@@ -102,6 +104,17 @@ const MainScreen = ({ navigation }) => {
         showSoftInputOnFocus={false}
         autoFocus={true}
         caretHidden={true}
+        onChangeText={(text) => {
+          if (!text) return;
+          const key = text.slice(-1);
+          if (key === '1') handleMenuPress(menuItems[0]);
+          else if (key === '2') handleMenuPress(menuItems[1]);
+          else if (key === '3') handleMenuPress(menuItems[2]);
+          else if (key === '4') handleMenuPress(menuItems[3]);
+          else if (key === '5') handleMenuPress(menuItems[4]);
+          hiddenInputRef.current?.clear();
+        }}
+        value=""
       />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>입반출 관리 시스템</Text>
@@ -262,8 +275,8 @@ const styles = StyleSheet.create({
   },
   hiddenInput: {
     position: 'absolute',
-    width: 0,
-    height: 0,
+    width: 1,
+    height: 1,
     opacity: 0,
   },
 });

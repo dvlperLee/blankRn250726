@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   FlatList,
   Modal,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { commonAPI } from '../services/apiService'
 import KeyEvent from "react-native-keyevent";
 
@@ -16,6 +17,7 @@ const Export = ({ navigation }) => {
   const [containerNumber, setcontainerNumber] = useState('');
   const [bringOutRegistrationNumber, setBringOutRegistrationNumber] = useState('');
   const [blNumber, setBlNumber] = useState('');
+  const [consignorId, setConsignorId] = useState('');
   const [showContainerDropdown, setShowContainerDropdown] = useState(false);
   const [filteredContainers, setFilteredContainers] = useState([]);
   const vehicleNoInputRef = useRef(null);
@@ -79,37 +81,39 @@ const Export = ({ navigation }) => {
   }, []);
 
   // 키 이벤트 리스너 설정
-  useEffect(() => {
-    // 키 다운 이벤트
-    KeyEvent.onKeyDownListener((e) => {
-      // Enter 키(66) 또는 Numpad Enter(160) 처리
-      if (e.keyCode === 66 || e.keyCode === 160) {
-        // 1. 알림창이 떠있는 경우 확인 동작 실행
-        let alertHandled = false;
-        setCustomAlert(prev => {
-          if (prev.visible && prev.onConfirm) {
-            const confirmFn = prev.onConfirm;
-            setTimeout(() => confirmFn(), 10);
-            alertHandled = true;
-            return { ...prev, visible: false };
+  useFocusEffect(
+    useCallback(() => {
+      // 키 다운 이벤트
+      KeyEvent.onKeyDownListener((e) => {
+        // Enter 키(66) 또는 Numpad Enter(160) 처리
+        if (e.keyCode === 66 || e.keyCode === 160) {
+          // 1. 알림창이 떠있는 경우 확인 동작 실행
+          let alertHandled = false;
+          setCustomAlert(prev => {
+            if (prev.visible && prev.onConfirm) {
+              const confirmFn = prev.onConfirm;
+              setTimeout(() => confirmFn(), 10);
+              alertHandled = true;
+              return { ...prev, visible: false };
+            }
+            return prev;
+          });
+
+          // 2. 알림창이 없고 컨테이너 입력창에 포커스가 있는 경우 제출 처리
+          if (!alertHandled && containerInputRef.current?.isFocused()) {
+            handleContainerSubmit();
           }
-          return prev;
-        });
-
-        // 2. 알림창이 없고 컨테이너 입력창에 포커스가 있는 경우 제출 처리
-        if (!alertHandled && containerInputRef.current?.isFocused()) {
-          handleContainerSubmit();
         }
-      }
-    });
+      });
 
-    // 컴포넌트 언마운트 시 리스너 제거
-    return () => {
-      KeyEvent.removeKeyDownListener();
-      KeyEvent.removeKeyUpListener();
-      KeyEvent.removeKeyMultipleListener();
-    };
-  }, [filteredContainers]);
+      // 컴포넌트 언마운트 시 리스너 제거
+      return () => {
+        KeyEvent.removeKeyDownListener();
+        KeyEvent.removeKeyUpListener();
+        KeyEvent.removeKeyMultipleListener();
+      };
+    }, [filteredContainers]) // filteredContainers 상태를 참조하도록 의존성 추가
+  );
 
   const handleCancel = () => navigation.goBack();
 
@@ -125,6 +129,7 @@ const Export = ({ navigation }) => {
         blNumber: blNumber,
         containerNumber: containerNumber,
         bringOutRegistrationNumber: bringOutRegistrationNumber,
+        consignorId: consignorId,
         userId: 'lee'
       });
       if (exportResult) {
@@ -179,6 +184,7 @@ const Export = ({ navigation }) => {
 
       setcontainerNumber(containerValue);
       setBlNumber(blNumberValue);
+      setConsignorId(firstItem.consignorId || '');
     }
 
     // 무조건 드롭다운 닫기
@@ -222,6 +228,7 @@ const Export = ({ navigation }) => {
 
     setcontainerNumber(containerValue);
     setBlNumber(blNumberValue);
+    setConsignorId(item.consignorId || '');
     setShowContainerDropdown(false);
 
     setTimeout(() => {

@@ -39,11 +39,11 @@ export const API_CONFIG = {
     IMPORT: '/reCtrl/updateBringInContainer',
     EXPORT: '/reCtrl/updateBringOutContainer',
     SELECT_HISTORY: '/reCtrl/selectHistory',
-    SELECT_IMPORT_MGMT: '/reCtrl/selectImportMgmt',
-    UPDATE_IMPORT_MGMT: '/reCtrl/updateImportMgmt',
-    SELECT_EXPORT_MGMT: '/reCtrl/selectExportMgmt',
-    UPDATE_EXPORT_MGMT: '/reCtrl/updateExportMgmt',
-    //USER_PROFILE: '/api/user/profile',
+    SELECT_IMPORT_MGMT: '/reCtrl/selectImportMgmtList',
+    UPDATE_IMPORT_MGMT: '/reCtrl/updateBringInContainerForMgmt',
+    SELECT_EXPORT_MGMT: '/reCtrl/selectExportMgmtList',
+    UPDATE_EXPORT_MGMT: '/reCtrl/updateBringOutContainerForMgmt',
+
     // 필요한 다른 엔드포인트들을 여기에 추가
   },
 
